@@ -1,3 +1,26 @@
 * {
-  font-family: "Oxygen", sans-serif;
+	font-family: 'Oxygen', sans-serif;
+}
+
+h1 {
+	font-size: 400%;
+}
+
+p {
+	font-size: 28px;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#container {
+	width: 50%;
+}
+
+#aths {
+	display: none;
 }
