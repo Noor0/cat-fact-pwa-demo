@@ -67,7 +67,7 @@ self.addEventListener("fetch", event => {
             const offlineData = await idbKeyval.get("facts", offlineStorage);
             const updatedArray = [
               ...(offlineData
-                ? [...offlineData, response].slice(-5)
+                ? [...offlineData, response].slice(-10)
                 : [response])
             ];
             await idbKeyval.set("facts", updatedArray, offlineStorage);
@@ -76,7 +76,7 @@ self.addEventListener("fetch", event => {
         })
         .catch(async err => {
           const factsArray = await idbKeyval.get("facts", offlineStorage);
-          const randIndex = Math.floor(Math.random() * (4 - 0 + 1)) + 0;
+          const randIndex = Math.floor(Math.random() * (10 - 0 + 1)) + 0;
           const blob = new Blob([JSON.stringify(factsArray[randIndex])], {
             type: "application/json"
           });
