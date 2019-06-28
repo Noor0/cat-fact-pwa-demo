@@ -74,7 +74,8 @@ self.addEventListener("fetch", event => {
   // console.log("FetchEvent", event);
   const url = new URL(event.request.url);
   //
-  if (assets.includes(url.pathname)) {
+  if (event.request.method === "POST") event.respondWith(fetch(event.request));
+  else if (assets.includes(url.pathname)) {
     event.respondWith(helper.respondFromCache(event));
   } else if (url.pathname.includes("/fact")) {
     event.respondWith(
