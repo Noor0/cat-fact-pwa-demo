@@ -62,7 +62,7 @@ self.addEventListener("push", function(event) {
       icon: "./images/icon-192.png",
       vibrate: [200, 100, 200, 100, 200, 100, 200],
       actions: [
-        { action: "check", title: "Explore" },
+        { action: "focus", title: "Focus" },
         { action: "close", title: "Close" }
       ]
     }
@@ -114,7 +114,7 @@ self.addEventListener("notificationclick", function(e) {
 
   if (action === "close") {
     notification.close();
-  } else if (action === "check") {
+  } else if (action === "focus") {
     e.waitUntil(
       clients
         .matchAll({
@@ -125,7 +125,7 @@ self.addEventListener("notificationclick", function(e) {
         })
     );
   } else {
-    clients.openWindow("http://www.example.com");
+    clients.openWindow("http://www.kittenwar.com/");
     notification.close();
   }
 });
