@@ -1,4 +1,4 @@
-const cacheName = "cache-v2";
+const cacheName = "cache-v15";
 const assets = ["/", "/script.js", "/style.css"];
 const excludeCache = ["fonts.googleapis.com"];
 
@@ -52,6 +52,24 @@ self.addEventListener("activate", event => {
   );
 });
 
+self.addEventListener("push", function(event) {
+  const notification = event.data.json();
+  const notificationDisplayed = self.registration.showNotification(
+    notification.title,
+    {
+      ...notification,
+      badge: "./images/icon-192.png",
+      icon: "./images/icon-192.png",
+      vibrate: [200, 100, 200, 100, 200, 100, 200],
+      actions: [
+        { action: "check", title: "Explore" },
+        { action: "close", title: "Close" }
+      ]
+    }
+  );
+  event.waitUntil(notificationDisplayed);
+});
+
 self.addEventListener("fetch", event => {
   // console.log("FetchEvent", event);
   const url = new URL(event.request.url);
@@ -87,3 +105,30 @@ self.addEventListener("fetch", event => {
     event.respondWith(helper.networkThenCache(event));
   }
 });
+
+self.addEventListener("notificationclick", function(e) {
+  var notification = e.notification;
+  // var primaryKey = notification.data.primaryKey;
+  var action = e.action;
+
+  if (action === "close") {
+    notification.close();
+  } else if (action === "check") {
+    e.waitUntil(
+      clients
+        .matchAll({
+          includeUncontrolled: true
+        })
+        .then(clients => {
+          clients[0].focus();
+        })
+    );
+  } else {
+    clients.openWindow("http://www.example.com");
+    notification.close();
+  }
+});
+
+// reg.pushManager.getSubscription().then(subscription => {
+//   console.log({ subscription });
+// });
