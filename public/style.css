@@ -38,3 +38,16 @@ button {
 button:focus {
   box-shadow: 0 0 3pt 2pt antiquewhite;
 }
+
+@media screen and (max-width: 525px) {
+  button {
+    padding: 15px;
+    background-color: antiquewhite;
+    border: 0px;
+    border-radius: 50px;
+    font-size: 1em;
+  }
+  #container {
+    width: 95%;
+  }
+}
