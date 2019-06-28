@@ -1,26 +1,40 @@
 * {
-	font-family: 'Oxygen', sans-serif;
+  font-family: "Oxygen", sans-serif;
 }
 
 h1 {
-	font-size: 400%;
+  font-size: 400%;
 }
 
 p {
-	font-size: 28px;
+  font-size: 28px;
 }
 
 body {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #container {
-	width: 50%;
+  width: 50%;
 }
 
 #aths {
-	display: none;
+  display: none;
+}
+
+button {
+  padding: 20px;
+  background-color: antiquewhite;
+  border: 0px;
+  border-radius: 50px;
+  font-size: 1.15em;
+  margin: 5px;
+  outline: none;
+}
+
+button:focus {
+  box-shadow: 0 0 3pt 2pt antiquewhite;
 }
