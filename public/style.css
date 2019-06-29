@@ -36,7 +36,7 @@ button {
 }
 
 button:focus {
-  box-shadow: 0 0 3pt 2pt antiquewhite;
+  box-shadow: 0px 8px 17px -8px rgba(165, 110, 117, 1);
 }
 
 @media screen and (max-width: 525px) {
