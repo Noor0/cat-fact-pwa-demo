@@ -1,4 +1,4 @@
-const cacheName = "cache-v17";
+const cacheName = "cache-v18";
 const assets = ["/", "/script.js", "/style.css"];
 const excludeCache = ["fonts.googleapis.com"];
 
@@ -8,24 +8,8 @@ importScripts(
 );
 const helper = new Helper();
 
-const openIDB = (db, objectStores) =>
-  new Promise((res, rej) => {
-    let openRequest = indexedDB.open(db, 1);
-    openRequest.onupgradeneeded = function() {
-      objectStores.forEach(os => openRequest.result.createObjectStore(os));
-    };
-    openRequest.onsuccess = function() {
-      res(openRequest.result);
-    };
-
-    openRequest.onerror = function() {
-      rej(openRequest.error);
-    };
-  });
-
 self.addEventListener("install", event => {
   self.skipWaiting();
-  clients.claim();
 
   event.waitUntil(
     caches.open(cacheName).then(cache => {
@@ -39,16 +23,22 @@ const offlineStorage = new idbKeyval.Store("offlineStorage", "factsStore");
 self.addEventListener("activate", event => {
   // delete old cahces
   event.waitUntil(
-    caches.keys().then(keys => {
-      keys.forEach(key => {
-        if (key !== cacheName)
-          caches
-            .delete(key)
-            .then(isDeleted =>
-              console.log(`cache ${key} deleted ${isDeleted}`)
-            );
-      });
-    })
+    Promise.all(
+      clients
+        .claim()
+        .then(caches.keys)
+        .then(keys => {
+          keys.map(key => {
+            if (key !== cacheName)
+              return caches
+                .delete(key)
+                .then(isDeleted =>
+                  console.log(`cache ${key} deleted ${isDeleted}`)
+                );
+            return Promise.resolve("");
+          });
+        })
+    )
   );
 });
 
