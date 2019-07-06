@@ -33,6 +33,7 @@ button {
   font-size: 1.15em;
   margin: 5px;
   outline: none;
+  transition: all 200ms ease-in-out;
 }
 
 button:focus {

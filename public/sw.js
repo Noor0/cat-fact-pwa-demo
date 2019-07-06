@@ -1,4 +1,4 @@
-const cacheName = "cache-v15";
+const cacheName = "cache-v17";
 const assets = ["/", "/script.js", "/style.css"];
 const excludeCache = ["fonts.googleapis.com"];
 
