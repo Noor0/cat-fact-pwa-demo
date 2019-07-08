@@ -1,8 +1,12 @@
 const cacheName = "cache-v18";
-const assets = ["/", "/script.js", "/style.css"];
-const excludeCache = ["fonts.googleapis.com"];
+const assets = [
+  "/",
+  "/script.js",
+  "/style.css",
+  "/manifest.json",
+  "/registerServiceWorker.js"
+];
 
-importScripts("/sw-helpers.js");
 importScripts(
   "https://cdn.jsdelivr.net/npm/idb-keyval@3/dist/idb-keyval-iife.min.js"
 );
@@ -10,8 +14,28 @@ importScripts(
   "https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js"
 );
 
+workbox.core.setCacheNameDetails({
+  prefix: "cat-fact",
+  suffix: "v1",
+  precache: "static-cache",
+  runtime: "dynamic-cache"
+});
+
+const precacheController = new workbox.precaching.PrecacheController();
+precacheController.addToCacheList(assets);
+
 const bgSyncPlugin = new workbox.backgroundSync.Plugin("sync-queue", {
   maxRetentionTime: 24 * 60
+});
+
+const offlineStorage = new idbKeyval.Store("offlineStorage", "factsStore");
+
+self.addEventListener("install", event => {
+  event.waitUntil(precacheController.install());
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(precacheController.activate());
 });
 
 workbox.routing.registerRoute(
@@ -22,36 +46,41 @@ workbox.routing.registerRoute(
   "POST"
 );
 
-const helper = new Helper();
+// cache favicons
+workbox.routing.registerRoute(
+  /(favicon|android-icon).*\.png/,
+  new workbox.strategies.CacheFirst()
+);
 
-self.addEventListener("install", event => {
-  self.skipWaiting();
+workbox.routing.registerRoute(
+  ({ url, event }) => assets.includes(url.pathname),
+  new workbox.strategies.CacheFirst({
+    cacheName: workbox.core.cacheNames.precache
+  })
+);
 
-  event.waitUntil(
-    caches.open(cacheName).then(cache => {
-      return cache.addAll(assets);
+workbox.routing.registerRoute(/\/fact/, ({ url, event, params }) => {
+  return fetch(event.request)
+    .then(async res => {
+      if (res.ok) {
+        const response = await res.clone().json();
+        const offlineData = await idbKeyval.get("facts", offlineStorage);
+        const updatedArray = [
+          ...(offlineData ? [...offlineData, response].slice(-10) : [response])
+        ];
+        await idbKeyval.set("facts", updatedArray, offlineStorage);
+        return res;
+      }
     })
-  );
-});
-
-const offlineStorage = new idbKeyval.Store("offlineStorage", "factsStore");
-const syncStorage = new idbKeyval.Store("syncStorage", "syncStore");
-
-self.addEventListener("activate", event => {
-  // delete old cahces
-  event.waitUntil(
-    caches.keys().then(keys => {
-      keys.map(key => {
-        if (key !== cacheName)
-          return caches
-            .delete(key)
-            .then(isDeleted =>
-              console.log(`cache ${key} deleted ${isDeleted}`)
-            );
-        return Promise.resolve("");
+    .catch(async err => {
+      const factsArray = await idbKeyval.get("facts", offlineStorage);
+      const randIndex =
+        Math.floor(Math.random() * (factsArray.length - 0 + 1)) + 0;
+      const blob = new Blob([JSON.stringify(factsArray[randIndex])], {
+        type: "application/json"
       });
-    })
-  );
+      return new Response(blob, { status: 200, statusText: "ok" });
+    });
 });
 
 self.addEventListener("push", function(event) {
@@ -70,47 +99,6 @@ self.addEventListener("push", function(event) {
     }
   );
   event.waitUntil(notificationDisplayed);
-});
-
-self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
-
-  if (
-    event.request.method === "POST" ||
-    event.request.method === "PUT" ||
-    event.request.method === "DELETE"
-  )
-    event.respondWith(fetch(event.request).catch(err => {}));
-  else if (assets.includes(url.pathname)) {
-    event.respondWith(helper.respondFromCache(event));
-  } else if (url.pathname.includes("/fact")) {
-    event.respondWith(
-      fetch(event.request)
-        .then(async res => {
-          if (res.ok) {
-            const response = await res.clone().json();
-            const offlineData = await idbKeyval.get("facts", offlineStorage);
-            const updatedArray = [
-              ...(offlineData
-                ? [...offlineData, response].slice(-10)
-                : [response])
-            ];
-            await idbKeyval.set("facts", updatedArray, offlineStorage);
-            return res;
-          }
-        })
-        .catch(async err => {
-          const factsArray = await idbKeyval.get("facts", offlineStorage);
-          const randIndex = Math.floor(Math.random() * (10 - 0 + 1)) + 0;
-          const blob = new Blob([JSON.stringify(factsArray[randIndex])], {
-            type: "application/json"
-          });
-          return new Response(blob, { status: 200, statusText: "ok" });
-        })
-    );
-  } else if (!/https:\/\/fonts\.googleapis\.com/.test(event.request.url)) {
-    event.respondWith(helper.networkThenCache(event));
-  }
 });
 
 self.addEventListener("notificationclick", function(e) {
@@ -134,10 +122,6 @@ self.addEventListener("notificationclick", function(e) {
     clients.openWindow("http://www.kittenwar.com/");
     notification.close();
   }
-});
-
-self.addEventListener("sync", e => {
-  console.log("sync", e);
 });
 
 // reg.pushManager.getSubscription().then(subscription => {
