@@ -13,7 +13,9 @@ function urlB64ToUint8Array(base64String) {
   return outputArray;
 }
 const pushBtn = document.getElementById("push-notif");
+// const actionBtn = document.getElementById("action");
 let subscribed;
+var registeration;
 
 function toggleNotificationBtn(isSubscribed) {
   subscribed = isSubscribed;
@@ -24,10 +26,27 @@ function toggleNotificationBtn(isSubscribed) {
   }
 }
 
+actionBtn.addEventListener("click", e => {
+  fetch("/action", { method: "POST" })
+    .then(res => {
+      if (res.ok) return res.json();
+    })
+    .then(res => {
+      actionBtn.innerHTML = `Action: ${res.action}`;
+    })
+    .catch(err => {
+      console.error("Error while performing action");
+    });
+});
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").then(reg => {
       console.log("registered service worker", reg);
+
+      window.addEventListener("offline", e => {
+        reg.sync.register("test-sync");
+      });
 
       reg.pushManager.getSubscription().then(sub => {
         console.log({ oldSub: sub });

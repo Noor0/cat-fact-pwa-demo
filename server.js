@@ -16,6 +16,7 @@ app.use(express.static("public"));
 app.use(bodyParser.json());
 
 let randomNumber = 0;
+let actionsReceived = 0;
 const push = [];
 
 app.get("/fact", (req, res) => {
@@ -23,6 +24,15 @@ app.get("/fact", (req, res) => {
     .get("https://catfact.ninja/fact")
     .then(({ data: { fact } }) => res.json({ fact }))
     .catch(err => res.json({ fact: `Error ${randomNumber++}` }));
+});
+
+app.post("/action", (req, res) => {
+  actionsReceived++;
+  res.status(200).json({ action: actionsReceived });
+});
+
+app.get("/action", (req, res) => {
+  res.status(200).json({ action: actionsReceived });
 });
 
 app.post("/subscribe", (req, res) => {

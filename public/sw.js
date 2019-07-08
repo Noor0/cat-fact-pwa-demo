@@ -6,6 +6,22 @@ importScripts("/sw-helpers.js");
 importScripts(
   "https://cdn.jsdelivr.net/npm/idb-keyval@3/dist/idb-keyval-iife.min.js"
 );
+importScripts(
+  "https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js"
+);
+
+const bgSyncPlugin = new workbox.backgroundSync.Plugin("sync-queue", {
+  maxRetentionTime: 24 * 60
+});
+
+workbox.routing.registerRoute(
+  /\/action/,
+  new workbox.strategies.NetworkOnly({
+    plugins: [bgSyncPlugin]
+  }),
+  "POST"
+);
+
 const helper = new Helper();
 
 self.addEventListener("install", event => {
@@ -19,26 +35,22 @@ self.addEventListener("install", event => {
 });
 
 const offlineStorage = new idbKeyval.Store("offlineStorage", "factsStore");
+const syncStorage = new idbKeyval.Store("syncStorage", "syncStore");
 
 self.addEventListener("activate", event => {
   // delete old cahces
   event.waitUntil(
-    Promise.all(
-      clients
-        .claim()
-        .then(caches.keys)
-        .then(keys => {
-          keys.map(key => {
-            if (key !== cacheName)
-              return caches
-                .delete(key)
-                .then(isDeleted =>
-                  console.log(`cache ${key} deleted ${isDeleted}`)
-                );
-            return Promise.resolve("");
-          });
-        })
-    )
+    caches.keys().then(keys => {
+      keys.map(key => {
+        if (key !== cacheName)
+          return caches
+            .delete(key)
+            .then(isDeleted =>
+              console.log(`cache ${key} deleted ${isDeleted}`)
+            );
+        return Promise.resolve("");
+      });
+    })
   );
 });
 
@@ -61,10 +73,14 @@ self.addEventListener("push", function(event) {
 });
 
 self.addEventListener("fetch", event => {
-  // console.log("FetchEvent", event);
   const url = new URL(event.request.url);
-  //
-  if (event.request.method === "POST") event.respondWith(fetch(event.request));
+
+  if (
+    event.request.method === "POST" ||
+    event.request.method === "PUT" ||
+    event.request.method === "DELETE"
+  )
+    event.respondWith(fetch(event.request).catch(err => {}));
   else if (assets.includes(url.pathname)) {
     event.respondWith(helper.respondFromCache(event));
   } else if (url.pathname.includes("/fact")) {
@@ -118,6 +134,10 @@ self.addEventListener("notificationclick", function(e) {
     clients.openWindow("http://www.kittenwar.com/");
     notification.close();
   }
+});
+
+self.addEventListener("sync", e => {
+  console.log("sync", e);
 });
 
 // reg.pushManager.getSubscription().then(subscription => {
