@@ -34,6 +34,7 @@ button {
   margin: 5px;
   outline: none;
   transition: all 200ms ease-in-out;
+  cursor: pointer;
 }
 
 button:focus {
