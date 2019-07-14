@@ -4,6 +4,8 @@ const webpush = require("web-push");
 const bodyParser = require("body-parser");
 const app = express();
 
+const PORT = process.env.PORT || 4000;
+
 const serverKey =
   "AAAAykKja5A:APA91bHJ0-jWbdBO0kcp5SUWS67cpAB5RW4lBeuG9UnJ_Rot3fsy01dqxqQMCI6VHvvKsRY_K2O_E3bixPUcuPRKVOs64-mIo2N3joDg9YN-hSVI4bBwiJ3Xg6nz4eEJdLACdGgm5zUT";
 const privateKey = "3LlzvLO1khMPuW9QG-42FEuwr8mRcmgKxxF0SSlMbxI";
@@ -51,4 +53,4 @@ app.get("/send", (req, res) => {
   });
 });
 
-app.listen(4000);
+app.listen(PORT);
