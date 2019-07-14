@@ -123,7 +123,3 @@ self.addEventListener("notificationclick", function(e) {
     notification.close();
   }
 });
-
-// reg.pushManager.getSubscription().then(subscription => {
-//   console.log({ subscription });
-// });
